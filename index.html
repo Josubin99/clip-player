@@ -37,6 +37,17 @@ span[data-icon]{display:inline-flex;align-items:center;justify-content:center;fl
 .hg-select-actions{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}.hg-select-actions .btn{flex:1 1 42%;font-size:12px;min-height:38px;padding:8px}
 .hg-handle,.hg-check{display:none!important}.hg-handle{border:0;background:none;color:var(--accent);font-size:25px;line-height:1;width:30px;min-width:30px;min-height:44px;touch-action:none;cursor:grab}
 .hg-check{width:22px;height:22px;min-width:22px;margin:0;accent-color:var(--accent)}
+/* 목록 편집 중 체크박스 왼쪽 숨 쉴 공간 확보 (일반 구간/그룹 동일) */
+#list.hg-selecting > .clip{padding-left:18px}
+#list.hg-selecting > .hg-group > .hg-group-head{padding-left:16px}
+/* 목록 편집: Safari 기본 체크박스 대신 작고 차분한 커스텀 체크 */
+#list .hg-check{appearance:none;-webkit-appearance:none;display:none;width:20px;height:20px;min-width:20px;flex:0 0 20px;margin:0;padding:0;border:1.5px solid var(--muted);border-radius:6px;background:transparent;box-shadow:none;outline:none;cursor:pointer;position:relative;transition:background .14s,border-color .14s}
+#list .hg-check:checked{background:var(--accent);border-color:var(--accent)}
+#list .hg-check:checked::after{content:"";position:absolute;left:5px;top:2px;width:5px;height:9px;border:solid var(--panel);border-width:0 2px 2px 0;transform:rotate(45deg)}
+#list .hg-check:focus-visible{outline:2px solid var(--accent)!important;outline-offset:3px!important}
+@media(hover:none){#list .hg-check:focus-visible{outline:none!important}}
+/* 체크박스 선택 시 Safari의 바깥 포커스 테두리 제거 */
+#list .hg-check:focus,#list .hg-check:focus-visible{outline:none!important;outline-offset:0!important;box-shadow:none!important;-webkit-tap-highlight-color:transparent}
 #list.hg-sorting .hg-handle{display:block!important}#list.hg-selecting .hg-check{display:block!important}
 #list.hg-sorting .clip-play,#list.hg-selecting .clip-play{pointer-events:none}
 #list.hg-sorting [data-action=menu],#list.hg-selecting [data-action=menu]{display:none}
@@ -52,6 +63,17 @@ span[data-icon]{display:inline-flex;align-items:center;justify-content:center;fl
 .hg-group-head{display:flex;align-items:center;gap:7px;padding:10px 8px}.hg-group-head .clip-play{min-height:55px}.hg-group-title{font-weight:700;font-size:14px}.hg-group-count{color:var(--muted);font-size:12px}
 .hg-group-toggle{border:0;background:none;color:var(--muted);min-width:35px;min-height:40px;font-size:19px}.hg-group-body{border-top:1px solid var(--line);padding:5px 8px 8px 18px}.hg-group-body[hidden]{display:none!important}.hg-group-body .clip{padding:8px 5px;margin:0}.hg-group-body .clip-title{font-size:13px}.hg-group-body .clip-time{font-size:11px}
 .hg-group .hg-group-head .hg-handle,.hg-group .hg-group-head .hg-check{display:none!important}
+/* 그룹 목록은 일반 구간과 같은 아이콘 언어를 사용합니다. */
+.hg-group-toggle{display:grid;place-items:center;width:36px;min-width:36px;height:36px;min-height:36px;padding:0;border:0;background:transparent;color:var(--muted)}
+.hg-group-toggle svg{width:20px;height:20px;transition:transform .16s ease}
+.hg-group[data-open="true"] .hg-group-toggle svg{transform:rotate(180deg)}
+.hg-group-head .hg-group-menu{border:0!important;background:transparent!important;box-shadow:none!important;width:36px;min-height:36px;padding:0;color:var(--muted)}
+.hg-group-head .hg-group-menu:hover{background:var(--soft)!important;color:var(--ink)}
+.hg-group-body .clip-play .num{font-size:inherit}
+
+/* 메뉴를 누른 뒤 남는 두꺼운 포커스 링은 터치 환경에서 표시하지 않습니다. */
+@media(hover:none){dialog .menu-buttons .btn:focus-visible{outline:none}}
+
 #list.hg-sorting .hg-group-head .hg-handle,#list.hg-selecting .hg-group-head .hg-check{display:block!important}
 #list.hg-sorting .hg-group-body .hg-handle{display:block!important}
 #list.hg-sorting .hg-group-body .clip-play{pointer-events:none}
@@ -61,7 +83,24 @@ span[data-icon]{display:inline-flex;align-items:center;justify-content:center;fl
 .hg-group-mode{font-size:12px;color:var(--muted);margin-top:8px}
 .hg-group-tools{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.hg-group-tools button{font-size:12px;min-height:34px;padding:6px 10px}
 .hg-group-head .hg-check{display:none!important}
+/* 그룹 목록은 일반 구간과 같은 아이콘 언어를 사용합니다. */
+.hg-group-toggle{display:grid;place-items:center;width:36px;min-width:36px;height:36px;min-height:36px;padding:0;border:0;background:transparent;color:var(--muted)}
+.hg-group-toggle svg{width:20px;height:20px;transition:transform .16s ease}
+.hg-group[data-open="true"] .hg-group-toggle svg{transform:rotate(180deg)}
+.hg-group-head .hg-group-menu{border:0!important;background:transparent!important;box-shadow:none!important;width:36px;min-height:36px;padding:0;color:var(--muted)}
+.hg-group-head .hg-group-menu:hover{background:var(--soft)!important;color:var(--ink)}
+.hg-group-body .clip-play .num{font-size:inherit}
+
+/* 메뉴를 누른 뒤 남는 두꺼운 포커스 링은 터치 환경에서 표시하지 않습니다. */
+@media(hover:none){dialog .menu-buttons .btn:focus-visible{outline:none}}
+
 .hg-transfer-part{padding:2px 0 18px}.hg-transfer-part+.hg-transfer-part{border-top:1px solid var(--line);padding-top:18px}.hg-transfer-part:last-child{padding-bottom:0}.hg-transfer-part h3{font-size:14px;letter-spacing:-.25px;margin:0 0 12px}.hg-transfer-part .full{margin-top:10px}.hg-transfer-part .btn{font-size:13px;font-weight:600;line-height:1.4;gap:8px}.hg-transfer-part .btn svg{width:18px;height:18px;flex:none}.hg-transfer-part .btn span[data-icon]{width:18px;height:18px}.hg-transfer-part .transfer{margin-top:0}.hg-transfer-part .transfer .btn{min-width:0;white-space:normal}.hg-group-head .clip-play{cursor:pointer}.hg-group-toggle{font-size:22px}.hg-group-body{background:var(--soft)}.hg-group-body .clip.active{background:var(--tint)}.hg-ghost{opacity:.97}#list.hg-sorting .hg-handle{touch-action:none;-webkit-user-select:none;user-select:none}
+/* Drag mode: lift the real item; no detached ghost or insertion rule. */
+#list.hg-sorting .clip.hg-dragging,#list.hg-sorting .hg-group.hg-dragging{position:relative;opacity:1;background:var(--panel);box-shadow:0 10px 28px #0003,0 0 0 1px var(--line);border-radius:14px;transition:none!important;will-change:transform}
+#list.hg-sorting .hg-group.hg-dragging{border-color:var(--line)}
+#list.hg-sorting .clip.hg-dragging:before,#list.hg-sorting .clip.hg-dragging:after{display:none}
+body.hg-drag-active{cursor:grabbing;user-select:none;-webkit-user-select:none}
+.hg-drag-placeholder{border-radius:14px;background:var(--tint);opacity:.45;pointer-events:none}#list.hg-sorting .hg-dragging{transition:none!important}
 </style>
 </head>
 <body>
@@ -158,7 +197,7 @@ if(!storageOK)toast('저장된 목록을 읽을 수 없어요. 백업 파일을 
 const $=id=>document.getElementById(id);
 const form=$('clip-form'),rows=document.createElement('div');rows.className='hg-ranges';
 const times=$('s').closest('.times');times.after(rows);
-const groupBox=document.createElement('div');groupBox.className='hg-group-form';groupBox.hidden=true;groupBox.innerHTML='<label for="hg-group-title">그룹 이름 · 선택</label><input id="hg-group-title" maxlength="120" placeholder="예: 나무귀이개 모음"><p class="hg-group-mode">여러 구간을 담으면 같은 영상의 한 그룹으로 저장돼요.</p>';
+const groupBox=document.createElement('div');groupBox.className='hg-group-form';groupBox.hidden=true;groupBox.innerHTML='<label for="hg-group-title">그룹 이름 · 선택</label><input id="hg-group-title" maxlength="120" placeholder="예: 좋아하는 구간 모음"><p class="hg-group-mode">여러 구간을 담으면 같은 영상의 한 그룹으로 저장돼요.</p>';
 $('url').closest('.field').after(groupBox);
 let appendGroupId='';
 function updateGroupForm(){groupBox.hidden=!rows.children.length&&!appendGroupId;}
@@ -187,8 +226,8 @@ save();resetForm();clearExtra();render();toast(entries.length+'개 구간을 그
 const expanded=new Set();
 function blocks(){const out=[];for(let i=0;i<clips.length;){const c=clips[i];if(c.groupId){const indices=[];let j=i;while(j<clips.length&&clips[j].groupId===c.groupId&&clips[j].id===c.id){indices.push(j);j++;}out.push({id:c.groupId,indices,first:i,group:true});i=j;}else{out.push({id:'single-'+i,indices:[i],first:i,group:false});i++;}}return out;}
 function groupTitle(b){return clips[b.first].groupTitle||clips[b.first].name||'같은 영상의 구간';}
-function clipRow(i,inside=false){const c=clips[i];return '<div class="clip'+(cur===i?' active':'')+'" data-clip-index="'+i+'"><button type="button" class="hg-handle" aria-label="순서 이동" data-handle="'+i+'">⠿</button><input type="checkbox" class="hg-check" data-select="'+i+'" '+(window.hgSelected?.has(i)?'checked':'')+' aria-label="'+esc(clipName(c,i))+' 선택"><button class="clip-play" data-action="play" data-index="'+i+'"><span class="num">'+(cur===i?icon(playing?'pause':'play'):inside?'↳':String(i+1).padStart(2,'0'))+'</span><span class="clip-text"><span class="clip-title">'+esc(clipName(c,i))+'</span><span class="clip-time">'+fmt(c.s)+' → '+(c.e==null?'끝':fmt(c.e))+(c.e==null?'':' · '+fmt(c.e-c.s))+'</span></span></button><button class="btn icon" data-action="menu" data-index="'+i+'" aria-label="구간 메뉴">'+icon('more')+'</button></div>';}
-window.hgRenderGrouped=()=>{if(!clips.length)return '<div class="empty"><p><strong>아직 담아둔 구간이 없어요</strong></p><p>좋아하는 부분부터 하나씩 담아보세요.</p></div>';return blocks().map(b=>{if(!b.group)return clipRow(b.first);const c=clips[b.first],open=expanded.has(b.id),duration=b.indices.reduce((n,i)=>n+(clips[i].e==null?0:clips[i].e-clips[i].s),0);return '<div class="hg-group" data-group="'+esc(b.id)+'"><div class="hg-group-head"><button type="button" class="hg-handle" data-group-handle="'+b.first+'" aria-label="그룹 순서 이동">⠿</button><input type="checkbox" class="hg-check" data-group-select="'+b.first+'" aria-label="그룹 전체 선택" '+(b.indices.every(i=>window.hgSelected?.has(i))?'checked':'')+'><button class="clip-play" data-group-toggle="'+esc(b.id)+'"><span class="num">'+(cur>=b.first&&cur<=b.indices.at(-1)?icon(playing?'pause':'play'):String(b.first+1).padStart(2,'0'))+'</span><span class="clip-text"><span class="hg-group-title">'+esc(groupTitle(b))+'</span><span class="clip-time">'+b.indices.length+'개 구간 · '+fmt(duration)+(b.indices.some(i=>clips[i].e==null)?' + 끝까지':'')+'</span></span></button><button class="hg-group-toggle" type="button" data-group-toggle="'+esc(b.id)+'" aria-label="'+(open?'접기':'펼치기')+'">'+(open?'⌃':'⌄')+'</button><button class="btn icon" type="button" data-group-menu="'+esc(b.id)+'" aria-label="그룹 메뉴">'+icon('more')+'</button></div><div class="hg-group-body" '+(open?'':'hidden')+'>'+b.indices.map(i=>clipRow(i,true)).join('')+'</div></div>';}).join('');};
+function clipRow(i,inside=false,ordinal=i+1){const c=clips[i];return '<div class="clip'+(cur===i?' active':'')+'" data-clip-index="'+i+'"><button type="button" class="hg-handle" aria-label="순서 이동" data-handle="'+i+'">⠿</button><input type="checkbox" class="hg-check" data-select="'+i+'" '+(window.hgSelected?.has(i)?'checked':'')+' aria-label="'+esc(clipName(c,i))+' 선택"><button class="clip-play" data-action="play" data-index="'+i+'"><span class="num">'+(cur===i?icon(playing?'pause':'play'):String(ordinal).padStart(2,'0'))+'</span><span class="clip-text"><span class="clip-title">'+esc(clipName(c,i))+'</span><span class="clip-time">'+fmt(c.s)+' → '+(c.e==null?'끝':fmt(c.e))+(c.e==null?'':' · '+fmt(c.e-c.s))+'</span></span></button><button class="btn icon" data-action="menu" data-index="'+i+'" aria-label="구간 메뉴">'+icon('more')+'</button></div>';}
+window.hgRenderGrouped=()=>{if(!clips.length)return '<div class="empty"><p><strong>아직 담아둔 구간이 없어요</strong></p><p>좋아하는 부분부터 하나씩 담아보세요.</p></div>';return blocks().map((b,topIndex)=>{if(!b.group)return clipRow(b.first,false,topIndex+1);const c=clips[b.first],open=expanded.has(b.id),duration=b.indices.reduce((n,i)=>n+(clips[i].e==null?0:clips[i].e-clips[i].s),0);return '<div class="hg-group" data-open="'+(open?'true':'false')+'" data-group="'+esc(b.id)+'"><div class="hg-group-head"><button type="button" class="hg-handle" data-group-handle="'+b.first+'" aria-label="그룹 순서 이동">⠿</button><input type="checkbox" class="hg-check" data-group-select="'+b.first+'" aria-label="그룹 전체 선택" '+(b.indices.every(i=>window.hgSelected?.has(i))?'checked':'')+'><button class="clip-play" data-group-toggle="'+esc(b.id)+'"><span class="num">'+(cur>=b.first&&cur<=b.indices.at(-1)?icon(playing?'pause':'play'):String(topIndex+1).padStart(2,'0'))+'</span><span class="clip-text"><span class="hg-group-title">'+esc(groupTitle(b))+'</span><span class="clip-time">'+b.indices.length+'개 구간 · '+fmt(duration)+(b.indices.some(i=>clips[i].e==null)?' + 끝까지':'')+'</span></span></button><button class="hg-group-toggle" type="button" data-group-toggle="'+esc(b.id)+'" aria-label="'+(open?'접기':'펼치기')+'">'+icon('chevron')+'</button><button class="btn icon hg-group-menu" type="button" data-group-menu="'+esc(b.id)+'" aria-label="그룹 메뉴">'+icon('more')+'</button></div><div class="hg-group-body" '+(open?'':'hidden')+'>'+b.indices.map((i,innerIndex)=>clipRow(i,true,innerIndex+1)).join('')+'</div></div>';}).join('');};
 const groupList=$('list');
 groupList.addEventListener('click',e=>{const t=e.target.closest('[data-group-toggle],[data-group-menu]');if(!t)return;e.preventDefault();e.stopPropagation();const id=t.dataset.groupToggle||t.dataset.groupMenu,b=blocks().find(b=>b.group&&b.id===id);if(!b)return;if(t.hasAttribute('data-group-toggle')){if(expanded.has(id))expanded.delete(id);else expanded.add(id);render();return;}
 openDialog(groupTitle(b),'<div class="menu-buttons"><button class="btn" id="hg-append">＋ 이 그룹에 구간 추가</button><button class="btn" id="hg-sort-time">시작 시간순 정렬</button><button class="btn" id="hg-rename-group">그룹 이름 변경</button><button class="btn" id="hg-ungroup">그룹 해제</button><button class="btn danger" id="hg-remove-group">그룹 전체 삭제</button></div>',null,null);
@@ -205,7 +244,7 @@ window.hgMode='normal';window.hgSelected=new Set();
 const list=$('list'),sortBtn=$('hg-sort-toggle'),selectBtn=$('hg-select-toggle'),note=$('hg-mode-note'),actions=$('hg-select-actions');
 function mode(next){window.hgMode=next;window.hgSelected.clear();list.classList.toggle('hg-sorting',next==='sort');list.classList.toggle('hg-selecting',next==='select');sortBtn.textContent=next==='sort'?'완료':'순서 변경';selectBtn.textContent=next==='select'?'완료':'목록 편집';sortBtn.setAttribute('aria-pressed',String(next==='sort'));selectBtn.setAttribute('aria-pressed',String(next==='select'));note.hidden=next==='normal';note.textContent=next==='sort'?'⠿ 아이콘을 드래그해 순서를 변경하세요.': '옮기거나 삭제할 구간을 체크하세요.';actions.hidden=next!=='select';render();updateActions();}
 sortBtn.onclick=()=>{if(window.hgMode!=='sort')blocks().filter(b=>b.group).forEach(b=>expanded.add(b.id));mode(window.hgMode==='sort'?'normal':'sort');};selectBtn.onclick=()=>mode(window.hgMode==='select'?'normal':'select');
-actions.innerHTML='<button type="button" class="btn" id="hg-select-all">전체 선택</button><button type="button" class="btn" id="hg-other-selected">다른 목록으로…</button><button type="button" class="btn" id="hg-group-selected">같은 영상 그룹으로 묶기</button><button type="button" class="btn danger" id="hg-delete-selected">선택 삭제</button>';
+actions.innerHTML='<button type="button" class="btn" id="hg-select-all">전체 선택</button><button type="button" class="btn" id="hg-other-selected">다른 목록으로 보내기</button><button type="button" class="btn" id="hg-group-selected">같은 영상 그룹으로 묶기</button><button type="button" class="btn danger" id="hg-delete-selected">선택 삭제</button>';
 function updateActions(){const n=window.hgSelected.size;note.textContent=window.hgMode==='select'?n+'개 선택됨 · 구간을 체크해 주세요.':note.textContent;['hg-other-selected','hg-delete-selected','hg-group-selected'].forEach(id=>$(id).disabled=!n);$('hg-select-all').textContent=n===clips.length&&n?'선택 해제':'전체 선택';$('hg-group-selected').disabled=n<2||new Set([...window.hgSelected].map(i=>clips[i]?.id)).size!==1;}
 list.addEventListener('change',ev=>{const b=ev.target.closest('[data-select]');if(!b)return;const i=Number(b.dataset.select);if(b.checked)window.hgSelected.add(i);else window.hgSelected.delete(i);updateActions();});
 $('hg-select-all').onclick=()=>{window.hgSelected=window.hgSelected.size===clips.length?new Set():new Set(clips.map((_,i)=>i));render();updateActions();};
@@ -222,18 +261,69 @@ for(const i of [...indices].reverse())clips.splice(i,1);resetForm();clearExtra()
 window.hgDeleteIndices=indices=>removeIndices(indices,true);
 undo.querySelector('button').onclick=()=>{if(!undoData)return;const {set,items}=undoData;for(const {i,c} of items)set.clips.splice(i,0,c);save();render();dismissUndo();toast('삭제를 취소했어요.');};
 $('hg-delete-selected').onclick=()=>{const indices=selectedIndices();if(!indices.length)return;openDialog('선택한 구간을 삭제할까요?','<p>'+indices.length+'개 구간을 삭제합니다. 삭제 후 실행 취소할 수 있어요.</p>','삭제',()=>{removeIndices(indices,true);mode('normal');});};
-// Safari 터치 드래그: 손잡이만 pointer capture, 따라오는 항목 + 삽입 위치 표시
+// Pointer drag: one floating original element and one invisible layout placeholder.
+// The dragged node is never simultaneously rendered in the list.
 let drag=null;
-function clearDrag(){if(!drag)return;drag.ghost.remove();drag.source.classList.remove('hg-source');list.querySelectorAll('.hg-drop-before,.hg-drop-after').forEach(el=>el.classList.remove('hg-drop-before','hg-drop-after'));drag=null;}
-list.addEventListener('pointerdown',ev=>{if(window.hgMode!=='sort')return;const h=ev.target.closest('.hg-handle');if(!h)return;ev.preventDefault();const isGroup=h.hasAttribute('data-group-handle'),i=Number(isGroup?h.dataset.groupHandle:h.dataset.handle),source=isGroup?h.closest('.hg-group'):h.closest('.clip');if(!source||!clips[i])return;const parentGroup=source.closest('.hg-group');if(!isGroup&&parentGroup&&source.closest('.hg-group-body')?.hidden)return;const ghost=document.createElement('div');ghost.className='hg-ghost';ghost.textContent='⠿  '+(isGroup?'그룹 · '+groupTitle(blocks().find(b=>b.first===i)) : clipName(clips[i],i))+' · '+fmt(clips[i].s)+' → '+(clips[i].e==null?'끝':fmt(clips[i].e));document.body.append(ghost);const w=Math.min(source.getBoundingClientRect().width,innerWidth-32);ghost.style.width=w+'px';source.classList.add('hg-source');drag={i,pid:ev.pointerId,source,ghost,to:i,after:false,isGroup,groupId:!isGroup&&parentGroup?parentGroup.dataset.group:null};moveGhost(ev);try{list.setPointerCapture(ev.pointerId)}catch{};});
-function moveGhost(ev){if(!drag)return;drag.ghost.style.left=Math.max(12,Math.min(innerWidth-drag.ghost.offsetWidth-12,ev.clientX-70))+'px';drag.ghost.style.top=ev.clientY+'px';}
-list.addEventListener('pointermove',ev=>{if(!drag||ev.pointerId!==drag.pid)return;ev.preventDefault();moveGhost(ev);const els=drag.isGroup?[...list.children].filter(x=>x.matches('.hg-group,.clip')):drag.groupId?[...list.querySelectorAll('.hg-group')].find(x=>x.dataset.group===drag.groupId)?.querySelectorAll('.hg-group-body .clip')||[]:[...list.children].filter(x=>x.matches('.hg-group,.clip'));if(!els.length)return;let to=els.length-1,after=true;for(let j=0;j<els.length;j++){const r=els[j].getBoundingClientRect();if(ev.clientY<r.top+r.height/2){to=j;after=false;break;}}drag.to=to;drag.after=after;drag.targetEls=[...els];els.forEach(el=>el.classList.remove('hg-drop-before','hg-drop-after'));els[to]?.classList.add(after?'hg-drop-after':'hg-drop-before');const r=list.getBoundingClientRect();if(ev.clientY>r.bottom-35)list.scrollTop+=12;else if(ev.clientY<r.top+35)list.scrollTop-=12;});
-list.addEventListener('pointerup',ev=>{if(!drag||ev.pointerId!==drag.pid)return;ev.preventDefault();const d=drag,from=d.i,targets=d.targetEls||[],target=targets[d.to],after=d.after;clearDrag();if(!target)return;
-const bs=blocks();const fromBlock=bs.find(b=>b.first===from);let targetFirst;
-if(d.groupId){const targetIndex=Number(target.dataset.clipIndex);const sourceGroup=clips[from].groupId;if(!sourceGroup||clips[targetIndex]?.groupId!==sourceGroup)return;const [item]=clips.splice(from,1);let insert=targetIndex+(after?1:0);if(from<insert)insert--;clips.splice(insert,0,item);}
-else{const targetIndex=target.matches('.hg-group')?Number(target.querySelector('[data-group-handle]')?.dataset.groupHandle):Number(target.dataset.clipIndex);const targetBlock=bs.find(b=>b.first===targetIndex);if(!fromBlock||!targetBlock)return;const moved=clips.splice(fromBlock.first,fromBlock.indices.length);let insert=targetBlock.first+(after?targetBlock.indices.length:0);if(fromBlock.first<insert)insert-=moved.length;clips.splice(insert,0,...moved);}
-cur=-1;pending=-1;resetForm();clearExtra();save();render();toast('순서를 변경했어요.');});
-list.addEventListener('pointercancel',clearDrag);
+function dragItems(d){return [...d.container.children].filter(el=>el===d.placeholder||el.matches(d.groupId?'.clip':'.clip,.hg-group')).map(el=>el===d.placeholder?d.source:el);}
+function clearDrag(){
+ if(!drag)return;
+ const d=drag;
+ d.placeholder.replaceWith(d.source);
+ d.source.classList.remove('hg-dragging');
+ for(const prop of ['position','top','left','width','height','zIndex','pointerEvents','margin','transform','boxSizing'])d.source.style[prop]='';
+ document.body.classList.remove('hg-drag-active');drag=null;
+}
+list.addEventListener('pointerdown',ev=>{
+ if(window.hgMode!=='sort'||drag)return;
+ const h=ev.target.closest('.hg-handle');if(!h)return;
+ ev.preventDefault();
+ const isGroup=h.hasAttribute('data-group-handle');
+ const i=Number(isGroup?h.dataset.groupHandle:h.dataset.handle);
+ const source=isGroup?h.closest('.hg-group'):h.closest('.clip');if(!source||!clips[i])return;
+ const parentGroup=source.closest('.hg-group');
+ const groupId=!isGroup&&parentGroup?parentGroup.dataset.group:null;
+ const container=groupId?source.closest('.hg-group-body'):list;
+ if(!container)return;
+ const r=source.getBoundingClientRect();
+ const placeholder=document.createElement('div');
+ placeholder.className='hg-drag-placeholder';
+ placeholder.style.height=r.height+'px';
+ placeholder.style.marginBottom=getComputedStyle(source).marginBottom;
+ const originalOrder=[...container.children].filter(el=>el.matches(groupId?'.clip':'.clip,.hg-group'));
+ source.before(placeholder);
+ document.body.append(source);
+ drag={pid:ev.pointerId,source,placeholder,container,groupId,isGroup,offsetY:ev.clientY-r.top,originalOrder};
+ source.classList.add('hg-dragging');document.body.classList.add('hg-drag-active');
+ Object.assign(source.style,{position:'fixed',top:r.top+'px',left:r.left+'px',width:r.width+'px',height:r.height+'px',zIndex:'1000',pointerEvents:'none',margin:'0',transform:'none',boxSizing:'border-box'});
+ try{list.setPointerCapture(ev.pointerId)}catch{}
+});
+list.addEventListener('pointermove',ev=>{
+ const d=drag;if(!d||ev.pointerId!==d.pid)return;ev.preventDefault();
+ const y=ev.clientY;
+ d.source.style.top=(y-d.offsetY)+'px';
+ const others=[...d.container.children].filter(el=>el!==d.placeholder&&el.matches(d.groupId?'.clip':'.clip,.hg-group'));
+ let before=null;
+ for(const el of others){const r=el.getBoundingClientRect();if(y<r.top+r.height/2){before=el;break;}}
+ if(d.placeholder.nextElementSibling!==before){
+   const old=new Map(others.map(el=>[el,el.getBoundingClientRect().top]));
+   d.container.insertBefore(d.placeholder,before);
+   for(const el of others){const delta=old.get(el)-el.getBoundingClientRect().top;
+     if(Math.abs(delta)>1){el.animate([{transform:`translateY(${delta}px)`},{transform:'translateY(0)'}],{duration:160,easing:'ease-out'});}
+   }
+ }
+ const bounds=list.getBoundingClientRect();if(y>bounds.bottom-35)list.scrollTop+=12;else if(y<bounds.top+35)list.scrollTop-=12;
+});
+list.addEventListener('pointerup',ev=>{
+ const d=drag;if(!d||ev.pointerId!==d.pid)return;ev.preventDefault();
+ const ordered=dragItems(d);const changed=ordered.some((el,i)=>el!==d.originalOrder[i]);
+ if(!changed){clearDrag();return;}
+ const original=clips.slice();
+ if(d.groupId){const indices=d.originalOrder.map(el=>Number(el.dataset.clipIndex));const orderedClips=ordered.map(el=>original[Number(el.dataset.clipIndex)]);indices.sort((a,b)=>a-b);indices.forEach((index,i)=>clips[index]=orderedClips[i]);}
+ else{const originalBlocks=blocks();const orderedBlocks=ordered.map(el=>{const first=el.matches('.hg-group')?Number(el.querySelector('[data-group-handle]').dataset.groupHandle):Number(el.dataset.clipIndex);return originalBlocks.find(b=>b.first===first);});if(orderedBlocks.some(b=>!b)){clearDrag();render();return;}clips.splice(0,clips.length,...orderedBlocks.flatMap(b=>b.indices.map(i=>original[i])));}
+ clearDrag();cur=-1;pending=-1;resetForm();clearExtra();save();render();toast('순서를 변경했어요.');
+});
+list.addEventListener('pointercancel',()=>{if(!drag)return;clearDrag();render();});
+list.addEventListener('lostpointercapture',()=>{if(!drag)return;clearDrag();render();});
 list.addEventListener('contextmenu',ev=>{if(ev.target.closest('.clip,.hg-group'))ev.preventDefault();});
 render();
 })();
