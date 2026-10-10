@@ -101,6 +101,31 @@ span[data-icon]{display:inline-flex;align-items:center;justify-content:center;fl
 #list.hg-sorting .clip.hg-dragging:before,#list.hg-sorting .clip.hg-dragging:after{display:none}
 body.hg-drag-active{cursor:grabbing;user-select:none;-webkit-user-select:none}
 .hg-drag-placeholder{border-radius:14px;background:var(--tint);opacity:.45;pointer-events:none}#list.hg-sorting .hg-dragging{transition:none!important}
+
+/* Final polish: playback status, selection actions and consistent controls. */
+#list .clip.active{background:var(--tint);box-shadow:inset 3px 0 0 var(--accent)}
+#list .clip.active .clip-title,#list .hg-group-active>.hg-group-head .hg-group-title{color:var(--accent)}
+#list .hg-group-active{border-color:var(--accent)}
+#list .hg-group-active>.hg-group-head{background:var(--tint)}
+.hg-playing-label{display:inline-flex;align-items:center;gap:5px;margin-top:3px;font-size:10px;line-height:1.3;font-weight:700;color:var(--accent)}
+.hg-playing-label:before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor}
+.hg-select-actions .btn:disabled{opacity:.38;cursor:not-allowed;filter:saturate(.6)}
+.hg-select-actions .btn{min-height:40px;border-radius:11px}
+.hg-menu-danger{margin-top:8px;padding-top:12px;border-top:1px solid var(--line)}
+.hg-menu-danger .btn{width:100%}
+.hg-menu-danger .btn:hover{background:var(--soft)}
+.menu-buttons .btn svg{width:18px;height:18px;flex:none;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.hg-empty-state{padding:42px 20px 46px;display:flex;align-items:center;flex-direction:column;gap:5px}
+.hg-empty-state>svg{width:30px;height:30px;margin:0 0 8px;stroke-width:1.6}
+.hg-empty-state .hg-empty-add{margin-top:16px;min-height:42px;font-size:13px}
+.hg-empty-state .hg-empty-add svg{width:16px;height:16px;margin:0;color:inherit}
+.hg-group-menu svg,.clip [data-action=menu] svg,.hg-group-toggle svg{stroke-width:1.8}
+@media(prefers-reduced-motion:reduce){.hg-group-toggle svg{transition:none!important}}
+
+/* Keep the playlist in the page's natural scroll flow (no nested scrollbar). */
+#list.list{max-height:none;overflow:visible;}
+/* Subtle group distinction without a heavy solid fill. */
+.hg-group-body{background:color-mix(in srgb,var(--soft) 45%,var(--panel));}
 </style>
 </head>
 <body>
@@ -123,7 +148,7 @@ body.hg-drag-active{cursor:grabbing;user-select:none;-webkit-user-select:none}
 <p class="error" id="form-error" role="alert" hidden></p><div class="form-actions"><button type="submit" class="btn primary" id="add"><span data-icon="plus"></span><span id="add-label">구간 담기</span></button><button type="button" class="btn" id="cancel-edit" hidden>취소</button></div><p class="hint">1:30 또는 90초 → 90 입력 · 끝을 비우면 끝까지</p></form></section>
 <section class="section"><details id="transfer-details"><summary>구간 가져오기 · 백업 <span data-icon="chevron"></span></summary>
 <div class="hg-transfer-part"><h3>텍스트로 구간 추가</h3><label for="bulk">한 줄에 한 구간씩 입력</label><textarea id="bulk" rows="4" placeholder="1:30~4:20  https://youtu.be/xxxxxxxxxxx" spellcheck="false"></textarea><button class="btn full" id="imp" type="button"><span data-icon="list-plus"></span>입력한 구간 추가</button><p class="hint">입력한 구간을 현재 재생목록에 추가해요.</p></div>
-<div class="hg-transfer-part"><h3>재생목록 내보내기</h3><button class="btn full" id="exp" type="button"><span data-icon="copy"></span> 현재 목록 텍스트 복사</button><p class="hint">현재 재생목록의 구간 정보를 텍스트로 복사해요.</p></div>
+<div class="hg-transfer-part"><h3>재생목록 내보내기</h3><button class="btn full" id="exp" type="button"><span data-icon="copy"></span> 현재 목록 텍스트 복사</button><p class="hint">현재 재생목록의 구간과 그룹 정보를 텍스트로 복사해요.</p></div>
 <div class="hg-transfer-part"><h3>전체 재생목록 백업</h3><div class="transfer"><button class="btn" id="backup" type="button"><span data-icon="backup-save"></span> 백업 파일 저장</button><button class="btn" id="restore" type="button"><span data-icon="backup-load"></span> 백업 파일 불러오기</button></div><input type="file" id="backup-file" accept="application/json,.json" hidden><p class="hint">모든 재생목록을 JSON 파일로 저장하거나 복원해요. 복원한 목록은 새 목록으로 추가돼요.</p></div>
 </details></section>
 </div></div>
@@ -134,7 +159,7 @@ body.hg-drag-active{cursor:grabbing;user-select:none;-webkit-user-select:none}
 <script>
 'use strict';
 const $=id=>document.getElementById(id);
-const paths={'list-plus':'<path d="M3 5h14M3 12h10M3 19h14M19 9v6M16 12h6"/>','backup-save':'<path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/>','backup-load':'<path d="M12 16V4m-5 5 5-5 5 5M4 17v4h16v-4"/>',play:'<path d="m8 5 11 7-11 7z"/>',pause:'<path d="M9 5v14M16 5v14"/>',plus:'<path d="M12 5v14M5 12h14"/>',repeat:'<path d="m17 3 4 4-4 4M21 7H7a4 4 0 0 0-4 4m4 10-4-4 4-4M3 17h14a4 4 0 0 0 4-4"/>',prev:'<path d="M5 5v14m14-14-10 7 10 7z"/>',next:'<path d="M19 5v14M5 5l10 7-10 7z"/>',moon:'<path d="M20.5 13A9 9 0 0 1 11 3.5a9 9 0 1 0 9.5 9.5Z"/>',sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1 1m12 12 1 1M5 19l1-1M18 6l1-1"/>',more:'<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',edit:'<path d="m15 5 4 4M4 20l4-1L20 7a2.8 2.8 0 0 0-4-4L4 15Z"/>',trash:'<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/>',up:'<path d="m6 14 6-6 6 6"/>',down:'<path d="m6 10 6 6 6-6"/>',chevron:'<path d="m6 9 6 6 6-6"/>',import:'<path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/>',copy:'<rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 4V3H3v13h1"/>'};
+const paths={'list-plus':'<path d="M3 5h14M3 12h10M3 19h14M19 9v6M16 12h6"/>','backup-save':'<path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/>','sort-time':'<path d="M4 6h10M4 12h7M4 18h4"/><path d="M19 5v14m-4-4 4 4 4-4"/>','ungroup':'<rect x="4" y="4" width="16" height="16" rx="3" stroke-dasharray="3 3"/><path d="M9 12h6"/>','backup-load':'<path d="M12 16V4m-5 5 5-5 5 5M4 17v4h16v-4"/>',play:'<path d="m8 5 11 7-11 7z"/>',pause:'<path d="M9 5v14M16 5v14"/>',plus:'<path d="M12 5v14M5 12h14"/>',repeat:'<path d="m17 3 4 4-4 4M21 7H7a4 4 0 0 0-4 4m4 10-4-4 4-4M3 17h14a4 4 0 0 0 4-4"/>',prev:'<path d="M5 5v14m14-14-10 7 10 7z"/>',next:'<path d="M19 5v14M5 5l10 7-10 7z"/>',moon:'<path d="M20.5 13A9 9 0 0 1 11 3.5a9 9 0 1 0 9.5 9.5Z"/>',sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1 1m12 12 1 1M5 19l1-1M18 6l1-1"/>',more:'<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',edit:'<path d="m15 5 4 4M4 20l4-1L20 7a2.8 2.8 0 0 0-4-4L4 15Z"/>',trash:'<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/>',up:'<path d="m6 14 6-6 6 6"/>',down:'<path d="m6 10 6 6 6-6"/>',chevron:'<path d="m6 9 6 6 6-6"/>',import:'<path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/>',copy:'<rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 4V3H3v13h1"/>'};
 const icon=n=>'<svg viewBox="0 0 24 24" aria-hidden="true">'+(paths[n]||paths.play)+'</svg>';
 document.querySelectorAll('[data-icon]').forEach(el=>el.innerHTML=icon(el.dataset.icon));
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -169,7 +194,7 @@ function editClip(i){editing=i;const c=clips[i];$('url').value='https://youtu.be
 function moveClip(i,delta){const j=i+delta;if(j<0||j>=clips.length)return;[clips[i],clips[j]]=[clips[j],clips[i]];if(cur===i)cur=j;else if(cur===j)cur=i;if(pending===i)pending=j;else if(pending===j)pending=i;resetForm();save();render();toast('구간 순서를 바꿨어요.')}
 $('list').onclick=e=>{if(e.target.closest('[data-group-toggle],[data-group-menu],[data-group-time]'))return;const b=e.target.closest('[data-action]');if(!b||window.hgMode!=='normal')return;const i=Number(b.dataset.index);if(b.dataset.action==='play'){go(i);return}if(b.dataset.action!=='menu')return;
  const c=clips[i];openDialog(clipName(c,i),'<div class="menu-buttons"><button class="btn" id="same-clip">'+icon('plus')+'같은 영상에 새 구간 추가</button><button class="btn" id="clone-clip">'+icon('copy')+'구간 복제 (목록에 추가)</button><button class="btn" id="copy-clip">'+icon('copy')+'구간 정보 텍스트 복사</button><button class="btn" id="edit-clip">'+icon('edit')+'구간 수정</button><button class="btn danger" id="delete-clip">'+icon('trash')+'구간 삭제</button></div>',null,null);
- $('same-clip').onclick=()=>{$('dialog').close();resetForm();window.hgClearExtra?.();$('url').value='https://youtu.be/'+c.id;$('editor').scrollIntoView({behavior:'smooth',block:'start'});$('s').focus({preventScroll:true})};
+ $('same-clip').onclick=()=>{$('dialog').close();resetForm();window.hgClearExtra?.();$('url').value='https://youtu.be/'+c.id;$('editor').scrollIntoView({behavior:'smooth',block:'start'});$('s').value=c.e==null?fmt(c.s):fmt(c.e);$('s').focus({preventScroll:true})};
  $('clone-clip').onclick=()=>{$('dialog').close();clips.splice(i+1,0,{...c});if(cur>i)cur++;if(pending>i)pending++;save();render();toast('같은 구간을 목록에 하나 더 추가했어요.')};
  $('copy-clip').onclick=async()=>{$('dialog').close();const txt=fmt(c.s)+'~'+(c.e==null?'끝':fmt(c.e))+'  https://youtu.be/'+c.id+(c.name?'\t'+c.name:'');try{await navigator.clipboard.writeText(txt);toast('구간 정보를 텍스트로 복사했어요.')}catch{const ta=$('bulk');ta.value=txt;$('transfer-details').open=true;ta.focus();ta.select();toast('텍스트가 입력창에 표시됐어요. 직접 복사해 주세요.')}};
  $('edit-clip').onclick=()=>{$('dialog').close();window.hgClearExtra?.();editClip(i)};
@@ -184,9 +209,45 @@ function createPlayer(){if(player)return;player=new YT.Player('player',{width:'1
 function go(i){if(i<0||i>=clips.length)return;cur=i;playing=false;hasPlayed=false;$('placeholder').hidden=true;$('play-status').textContent=ready?'BUFFERING':'유튜브에 연결 중';render();if(!ready){pending=i;ensureAPI();return}pending=-1;const c=clips[i],args={videoId:c.id,startSeconds:c.s};if(c.e!==null)args.endSeconds=c.e;player.loadVideoById(args)}
 $('play').onclick=()=>{if(cur<0)go(0);else if(!ready){pending=cur;ensureAPI()}else if(playing)player.pauseVideo();else player.playVideo()};$('prev').onclick=()=>go(cur-1);$('next').onclick=()=>go(cur+1<clips.length?cur+1:0);
 ['s','e'].forEach(k=>$('capture-'+k).onclick=()=>{if(cur<0||!ready){toast('먼저 구간을 재생해 주세요.');return}const id=clips[cur].id;if($('url').value.trim()&&videoId($('url').value)!==id){toast('입력한 링크와 재생 중인 영상이 달라요.');return}$('url').value='https://youtu.be/'+id;$(k).value=fmt(player.getCurrentTime())});
-function exportText(){return clips.map(c=>fmt(c.s)+'~'+(c.e==null?'끝':fmt(c.e))+'  https://youtu.be/'+c.id+(c.name?'\t'+c.name:'')).join('\n')}
-$('exp').onclick=async()=>{if(!clips.length){toast('복사할 구간이 없어요.');return}const text=exportText();$('bulk').value=text;try{await navigator.clipboard.writeText(text);toast('목록을 복사했어요. 메모 앱에 붙여넣어 보관하세요.')}catch{$('bulk').focus();$('bulk').select();toast('위 텍스트를 선택해서 직접 복사해 주세요.')}};
-$('imp').onclick=()=>{let n=0,bad=0,invalid=[];for(const line of $('bulk').value.split('\n')){if(!line.trim())continue;const url=line.match(/https?:\/\/\S+/)?.[0],id=videoId(url||'');if(!id){bad++;invalid.push(line);continue}const before=line.slice(0,line.indexOf(url)).trim(),m=before.match(/^(\d+(?::\d{1,2}){0,2})\s*(?:[~〜～–-]\s*(끝|\d+(?::\d{1,2}){0,2}))?$/);if(before&&!m){bad++;invalid.push(line);continue}const s=m?parseT(m[1]):linkTime(url),end=m?.[2]&&m[2]!=='끝'?parseT(m[2]):null;if(!Number.isFinite(s)||(end!==null&&(!Number.isFinite(end)||end<=s))){bad++;invalid.push(line);continue}const name=line.slice(line.indexOf(url)+url.length).trim().slice(0,120);clips.push({id,s,e:end,name});n++}save();render();$('bulk').value=invalid.join('\n');toast(n+'개 추가'+(bad?' · '+bad+'줄은 형식을 확인해 주세요.':''))};
+// Text format stays backward-compatible: plain clip lines are unchanged.
+// Group boundaries are written as human-readable comment lines.
+function exportText(){
+ const lines=[];let previousGroup='';
+ for(const c of clips){
+  const gid=c.groupId||'';
+  if(previousGroup&&gid!==previousGroup)lines.push('# 그룹 끝');
+  if(gid&&gid!==previousGroup)lines.push('# 그룹: '+(c.groupTitle||'같은 영상의 구간').replace(/[\r\n]/g,' ').slice(0,120));
+  lines.push(fmt(c.s)+'~'+(c.e==null?'끝':fmt(c.e))+'  https://youtu.be/'+c.id+(c.name?'\t'+c.name:''));
+  previousGroup=gid;
+ }
+ if(previousGroup)lines.push('# 그룹 끝');
+ return lines.join('\n');
+}
+$('exp').onclick=async()=>{if(!clips.length){toast('복사할 구간이 없어요.');return}const text=exportText();$('bulk').value=text;try{await navigator.clipboard.writeText(text);toast('목록을 복사했어요. 그룹 정보도 함께 보관돼요.')}catch{$('bulk').focus();$('bulk').select();toast('위 텍스트를 선택해서 직접 복사해 주세요.')}};
+$('imp').onclick=()=>{
+ let n=0,bad=0,invalid=[],group=null,groupVideoId=null,groupCount=0;
+ const freshGroupId=()=> 'hg-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,9);
+ for(const line of $('bulk').value.split(/\r?\n/)){
+  const trimmed=line.trim();if(!trimmed)continue;
+  const groupStart=trimmed.match(/^#\s*그룹\s*:\s*(.*)$/);
+  if(groupStart){group={id:freshGroupId(),title:(groupStart[1].trim()||'같은 영상의 구간').slice(0,120)};groupVideoId=null;groupCount=0;continue;}
+  if(/^#\s*그룹\s*끝\s*$/.test(trimmed)){group=null;groupVideoId=null;groupCount=0;continue;}
+  const url=line.match(/https?:\/\/\S+/)?.[0],id=videoId(url||'');
+  if(!id){bad++;invalid.push(line);continue}
+  const before=line.slice(0,line.indexOf(url)).trim(),m=before.match(/^(\d+(?::\d{1,2}){0,2})\s*(?:[~〜～–-]\s*(끝|\d+(?::\d{1,2}){0,2}))?$/);
+  if(before&&!m){bad++;invalid.push(line);continue}
+  const s=m?parseT(m[1]):linkTime(url),end=m?.[2]&&m[2]!=='끝'?parseT(m[2]):null;
+  if(!Number.isFinite(s)||(end!==null&&(!Number.isFinite(end)||end<=s))){bad++;invalid.push(line);continue}
+  const name=line.slice(line.indexOf(url)+url.length).trim().slice(0,120),c={id,s,e:end,name};
+  if(group){
+   // Groups can only contain one video; never silently combine different videos.
+   if(groupVideoId&&groupVideoId!==id){bad++;invalid.push(line);continue;}
+   groupVideoId=id;groupCount++;c.groupId=group.id;c.groupTitle=group.title;
+  }
+  clips.push(c);n++;
+ }
+ save();render();$('bulk').value=invalid.join('\n');toast(n+'개 추가'+(bad?' · '+bad+'줄은 형식을 확인해 주세요.':''));
+};
 $('backup').onclick=()=>{const blob=new Blob([JSON.stringify({app:'hangugan',version:1,sets},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='hangugan-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('전체 재생목록 백업을 저장했어요.')};
 $('restore').onclick=()=>$('backup-file').click();$('backup-file').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{if(f.size>5*1024*1024)throw Error();const raw=JSON.parse(await f.text()),incoming=cleanSets(Array.isArray(raw)?raw:raw.sets);if(!incoming.length)throw Error();const index=sets.length;sets.push(...incoming);switchSet(index);toast(incoming.length+'개 재생목록을 추가했어요.')}catch{toast('유효한 재생목록 백업 JSON 파일을 선택해 주세요.')}finally{e.target.value=''}};
 if(!storageOK)toast('저장된 목록을 읽을 수 없어요. 백업 파일을 불러와 주세요.');
@@ -227,10 +288,11 @@ const expanded=new Set();
 function blocks(){const out=[];for(let i=0;i<clips.length;){const c=clips[i];if(c.groupId){const indices=[];let j=i;while(j<clips.length&&clips[j].groupId===c.groupId&&clips[j].id===c.id){indices.push(j);j++;}out.push({id:c.groupId,indices,first:i,group:true});i=j;}else{out.push({id:'single-'+i,indices:[i],first:i,group:false});i++;}}return out;}
 function groupTitle(b){return clips[b.first].groupTitle||clips[b.first].name||'같은 영상의 구간';}
 function clipRow(i,inside=false,ordinal=i+1){const c=clips[i];return '<div class="clip'+(cur===i?' active':'')+'" data-clip-index="'+i+'"><button type="button" class="hg-handle" aria-label="순서 이동" data-handle="'+i+'">⠿</button><input type="checkbox" class="hg-check" data-select="'+i+'" '+(window.hgSelected?.has(i)?'checked':'')+' aria-label="'+esc(clipName(c,i))+' 선택"><button class="clip-play" data-action="play" data-index="'+i+'"><span class="num">'+(cur===i?icon(playing?'pause':'play'):String(ordinal).padStart(2,'0'))+'</span><span class="clip-text"><span class="clip-title">'+esc(clipName(c,i))+'</span><span class="clip-time">'+fmt(c.s)+' → '+(c.e==null?'끝':fmt(c.e))+(c.e==null?'':' · '+fmt(c.e-c.s))+'</span></span></button><button class="btn icon" data-action="menu" data-index="'+i+'" aria-label="구간 메뉴">'+icon('more')+'</button></div>';}
-window.hgRenderGrouped=()=>{if(!clips.length)return '<div class="empty"><p><strong>아직 담아둔 구간이 없어요</strong></p><p>좋아하는 부분부터 하나씩 담아보세요.</p></div>';return blocks().map((b,topIndex)=>{if(!b.group)return clipRow(b.first,false,topIndex+1);const c=clips[b.first],open=expanded.has(b.id),duration=b.indices.reduce((n,i)=>n+(clips[i].e==null?0:clips[i].e-clips[i].s),0);return '<div class="hg-group" data-open="'+(open?'true':'false')+'" data-group="'+esc(b.id)+'"><div class="hg-group-head"><button type="button" class="hg-handle" data-group-handle="'+b.first+'" aria-label="그룹 순서 이동">⠿</button><input type="checkbox" class="hg-check" data-group-select="'+b.first+'" aria-label="그룹 전체 선택" '+(b.indices.every(i=>window.hgSelected?.has(i))?'checked':'')+'><button class="clip-play" data-group-toggle="'+esc(b.id)+'"><span class="num">'+(cur>=b.first&&cur<=b.indices.at(-1)?icon(playing?'pause':'play'):String(topIndex+1).padStart(2,'0'))+'</span><span class="clip-text"><span class="hg-group-title">'+esc(groupTitle(b))+'</span><span class="clip-time">'+b.indices.length+'개 구간 · '+fmt(duration)+(b.indices.some(i=>clips[i].e==null)?' + 끝까지':'')+'</span></span></button><button class="hg-group-toggle" type="button" data-group-toggle="'+esc(b.id)+'" aria-label="'+(open?'접기':'펼치기')+'">'+icon('chevron')+'</button><button class="btn icon hg-group-menu" type="button" data-group-menu="'+esc(b.id)+'" aria-label="그룹 메뉴">'+icon('more')+'</button></div><div class="hg-group-body" '+(open?'':'hidden')+'>'+b.indices.map((i,innerIndex)=>clipRow(i,true,innerIndex+1)).join('')+'</div></div>';}).join('');};
+window.hgRenderGrouped=()=>{if(!clips.length)return '<div class="empty hg-empty-state">'+icon('plus')+'<p><strong>첫 구간을 담아볼까요?</strong></p><p>좋아하는 영상의 시작과 끝을 정해 저장해 보세요.</p><button class="btn primary hg-empty-add" type="button" id="hg-empty-add">'+icon('plus')+' 구간 추가하기</button></div>';return blocks().map((b,topIndex)=>{if(!b.group)return clipRow(b.first,false,topIndex+1);const c=clips[b.first],open=expanded.has(b.id),groupActive=b.indices.includes(cur),duration=b.indices.reduce((n,i)=>n+(clips[i].e==null?0:clips[i].e-clips[i].s),0);return '<div class="hg-group'+(groupActive?' hg-group-active':'')+'" data-open="'+(open?'true':'false')+'" data-group="'+esc(b.id)+'"><div class="hg-group-head"><button type="button" class="hg-handle" data-group-handle="'+b.first+'" aria-label="그룹 순서 이동">⠿</button><input type="checkbox" class="hg-check" data-group-select="'+b.first+'" aria-label="그룹 전체 선택" '+(b.indices.every(i=>window.hgSelected?.has(i))?'checked':'')+'><button class="clip-play" data-group-toggle="'+esc(b.id)+'"><span class="num">'+(cur>=b.first&&cur<=b.indices.at(-1)?icon(playing?'pause':'play'):String(topIndex+1).padStart(2,'0'))+'</span><span class="clip-text"><span class="hg-group-title">'+esc(groupTitle(b))+'</span><span class="clip-time">'+b.indices.length+'개 구간 · '+fmt(duration)+(b.indices.some(i=>clips[i].e==null)?' + 끝까지':'')+'</span></span></button><button class="hg-group-toggle" type="button" data-group-toggle="'+esc(b.id)+'" aria-label="'+(open?'접기':'펼치기')+'">'+icon('chevron')+'</button><button class="btn icon hg-group-menu" type="button" data-group-menu="'+esc(b.id)+'" aria-label="그룹 메뉴">'+icon('more')+'</button></div><div class="hg-group-body" '+(open?'':'hidden')+'>'+b.indices.map((i,innerIndex)=>clipRow(i,true,innerIndex+1)).join('')+'</div></div>';}).join('');};
 const groupList=$('list');
+groupList.addEventListener('click',e=>{if(e.target.closest('#hg-empty-add')){$('editor').scrollIntoView({behavior:'smooth',block:'start'});$('url').focus({preventScroll:true});}});
 groupList.addEventListener('click',e=>{const t=e.target.closest('[data-group-toggle],[data-group-menu]');if(!t)return;e.preventDefault();e.stopPropagation();const id=t.dataset.groupToggle||t.dataset.groupMenu,b=blocks().find(b=>b.group&&b.id===id);if(!b)return;if(t.hasAttribute('data-group-toggle')){if(expanded.has(id))expanded.delete(id);else expanded.add(id);render();return;}
-openDialog(groupTitle(b),'<div class="menu-buttons"><button class="btn" id="hg-append">＋ 이 그룹에 구간 추가</button><button class="btn" id="hg-sort-time">시작 시간순 정렬</button><button class="btn" id="hg-rename-group">그룹 이름 변경</button><button class="btn" id="hg-ungroup">그룹 해제</button><button class="btn danger" id="hg-remove-group">그룹 전체 삭제</button></div>',null,null);
+openDialog(groupTitle(b),'<div class="menu-buttons"><button class="btn" id="hg-append">'+icon('plus')+'이 그룹에 구간 추가</button><button class="btn" id="hg-sort-time">'+icon('sort-time')+'시작 시간순 정렬</button><button class="btn" id="hg-rename-group">'+icon('edit')+'그룹 이름 변경</button><button class="btn" id="hg-ungroup">'+icon('ungroup')+'그룹 해제</button><div class="hg-menu-danger"><button class="btn danger" id="hg-remove-group">'+icon('trash')+'그룹 전체 삭제</button></div></div>',null,null);
 $('hg-append').onclick=()=>{$('dialog').close();resetForm();clearExtra();appendGroupId=id;$('url').value='https://youtu.be/'+clips[b.first].id;groupBox.querySelector('input').value=groupTitle(b);updateGroupForm();$('form-title').textContent='그룹에 구간 추가';$('editor').scrollIntoView({behavior:'smooth'});};
 $('hg-sort-time').onclick=()=>{$('dialog').close();const sorted=b.indices.map(i=>clips[i]).sort((a,z)=>a.s-z.s);clips.splice(b.first,b.indices.length,...sorted);cur=-1;pending=-1;save();render();toast('그룹을 시간순으로 정렬했어요.');};
 $('hg-rename-group').onclick=()=>{$('dialog').close();openDialog('그룹 이름 변경','<label for="hg-rename">그룹 이름</label><input id="hg-rename" maxlength="120" value="'+esc(groupTitle(b))+'">','저장',()=>{const name=$('hg-rename').value.trim();if(!name)return false;b.indices.forEach(i=>clips[i].groupTitle=name);save();render();});};
@@ -245,12 +307,12 @@ const list=$('list'),sortBtn=$('hg-sort-toggle'),selectBtn=$('hg-select-toggle')
 function mode(next){window.hgMode=next;window.hgSelected.clear();list.classList.toggle('hg-sorting',next==='sort');list.classList.toggle('hg-selecting',next==='select');sortBtn.textContent=next==='sort'?'완료':'순서 변경';selectBtn.textContent=next==='select'?'완료':'목록 편집';sortBtn.setAttribute('aria-pressed',String(next==='sort'));selectBtn.setAttribute('aria-pressed',String(next==='select'));note.hidden=next==='normal';note.textContent=next==='sort'?'⠿ 아이콘을 드래그해 순서를 변경하세요.': '옮기거나 삭제할 구간을 체크하세요.';actions.hidden=next!=='select';render();updateActions();}
 sortBtn.onclick=()=>{if(window.hgMode!=='sort')blocks().filter(b=>b.group).forEach(b=>expanded.add(b.id));mode(window.hgMode==='sort'?'normal':'sort');};selectBtn.onclick=()=>mode(window.hgMode==='select'?'normal':'select');
 actions.innerHTML='<button type="button" class="btn" id="hg-select-all">전체 선택</button><button type="button" class="btn" id="hg-other-selected">다른 목록으로 보내기</button><button type="button" class="btn" id="hg-group-selected">같은 영상 그룹으로 묶기</button><button type="button" class="btn danger" id="hg-delete-selected">선택 삭제</button>';
-function updateActions(){const n=window.hgSelected.size;note.textContent=window.hgMode==='select'?n+'개 선택됨 · 구간을 체크해 주세요.':note.textContent;['hg-other-selected','hg-delete-selected','hg-group-selected'].forEach(id=>$(id).disabled=!n);$('hg-select-all').textContent=n===clips.length&&n?'선택 해제':'전체 선택';$('hg-group-selected').disabled=n<2||new Set([...window.hgSelected].map(i=>clips[i]?.id)).size!==1;}
+function updateActions(){const n=window.hgSelected.size;note.textContent=window.hgMode==='select'?(n?n+'개 선택됨 · 아래에서 작업을 선택하세요.':'구간을 체크하면 작업 버튼이 활성화돼요.'):note.textContent;['hg-other-selected','hg-delete-selected','hg-group-selected'].forEach(id=>$(id).disabled=!n);$('hg-select-all').textContent=n===clips.length&&n?'선택 해제':'전체 선택';$('hg-group-selected').disabled=n<2;}
 list.addEventListener('change',ev=>{const b=ev.target.closest('[data-select]');if(!b)return;const i=Number(b.dataset.select);if(b.checked)window.hgSelected.add(i);else window.hgSelected.delete(i);updateActions();});
 $('hg-select-all').onclick=()=>{window.hgSelected=window.hgSelected.size===clips.length?new Set():new Set(clips.map((_,i)=>i));render();updateActions();};
 function selectedIndices(){return [...window.hgSelected].sort((a,b)=>a-b).filter(i=>i>=0&&i<clips.length);}
 function destination(action){const indices=selectedIndices();if(!indices.length)return;const choices=sets.map((s,i)=>i!==act?'<option value="'+i+'">'+esc(s.name)+'</option>':'').join('');if(!choices){toast('먼저 다른 재생목록을 만들어 주세요.');return;}openDialog(action==='move'?'선택한 구간 이동':'선택한 구간 복사','<p>'+indices.length+'개 구간을 보낼 재생목록을 선택하세요.</p><label for="hg-dest">대상 재생목록</label><select id="hg-dest">'+choices+'</select>',action==='move'?'이동':'복사',()=>{const dest=Number($('hg-dest').value),items=indices.map(i=>({...clips[i]}));sets[dest].clips.push(...items);if(action==='move')removeIndices(indices,false);save();mode('normal');toast(items.length+'개 구간을 '+(action==='move'?'이동':'복사')+'했어요.');});}
-$('hg-group-selected').onclick=()=>{const indices=selectedIndices();if(indices.length<2||new Set(indices.map(i=>clips[i].id)).size!==1){toast('같은 영상의 구간만 그룹으로 묶을 수 있어요.');return;}openDialog('그룹으로 묶기','<label for="hg-new-group">그룹 이름</label><input id="hg-new-group" maxlength="120" placeholder="그룹 이름">','묶기',()=>{const name=$('hg-new-group').value.trim()||clips[indices[0]].name||'같은 영상의 구간';const gid='hg-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);const items=indices.map(i=>({...clips[i],groupId:gid,groupTitle:name})).sort((a,b)=>a.s-b.s);for(const i of [...indices].reverse())clips.splice(i,1);clips.splice(indices[0],0,...items);cur=-1;pending=-1;save();mode('normal');toast('같은 영상 구간을 그룹으로 묶었어요.');});};
+$('hg-group-selected').onclick=()=>{const indices=selectedIndices();if(indices.length<2){toast('구간을 2개 이상 선택해 주세요.');return;}if(new Set(indices.map(i=>clips[i].id)).size!==1){toast('서로 다른 영상이 포함돼 있어요. 같은 영상의 구간만 선택해 주세요.');return;}openDialog('그룹으로 묶기','<label for="hg-new-group">그룹 이름</label><input id="hg-new-group" maxlength="120" placeholder="그룹 이름">','묶기',()=>{const name=$('hg-new-group').value.trim()||clips[indices[0]].name||'같은 영상의 구간';const gid='hg-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);const items=indices.map(i=>({...clips[i],groupId:gid,groupTitle:name})).sort((a,b)=>a.s-b.s);for(const i of [...indices].reverse())clips.splice(i,1);clips.splice(indices[0],0,...items);cur=-1;pending=-1;save();mode('normal');toast('같은 영상 구간을 그룹으로 묶었어요.');});};
 $('hg-other-selected').onclick=()=>{const indices=selectedIndices();if(!indices.length)return;if(sets.length<2){toast('먼저 다른 재생목록을 만들어 주세요.');return;}openDialog('다른 재생목록으로','<p>선택한 '+indices.length+'개 구간을 어떻게 할까요?</p><div class="menu-buttons"><button type="button" class="btn" id="hg-choose-copy">'+icon('copy')+'복사하기</button><button type="button" class="btn" id="hg-choose-move">'+icon('next')+'이동하기</button></div>',null,null);$('hg-choose-copy').onclick=()=>{$('dialog').close();destination('copy')};$('hg-choose-move').onclick=()=>{$('dialog').close();destination('move')};};
 let undoTimer=null,undoData=null;const undo=document.createElement('div');undo.className='hg-undo';undo.hidden=true;undo.innerHTML='<span id="hg-undo-text"></span><button type="button">실행 취소</button>';document.body.append(undo);
 function dismissUndo(){clearTimeout(undoTimer);undo.hidden=true;undoData=null;}
@@ -320,7 +382,7 @@ list.addEventListener('pointerup',ev=>{
  const original=clips.slice();
  if(d.groupId){const indices=d.originalOrder.map(el=>Number(el.dataset.clipIndex));const orderedClips=ordered.map(el=>original[Number(el.dataset.clipIndex)]);indices.sort((a,b)=>a-b);indices.forEach((index,i)=>clips[index]=orderedClips[i]);}
  else{const originalBlocks=blocks();const orderedBlocks=ordered.map(el=>{const first=el.matches('.hg-group')?Number(el.querySelector('[data-group-handle]').dataset.groupHandle):Number(el.dataset.clipIndex);return originalBlocks.find(b=>b.first===first);});if(orderedBlocks.some(b=>!b)){clearDrag();render();return;}clips.splice(0,clips.length,...orderedBlocks.flatMap(b=>b.indices.map(i=>original[i])));}
- clearDrag();cur=-1;pending=-1;resetForm();clearExtra();save();render();toast('순서를 변경했어요.');
+ clearDrag();cur=-1;pending=-1;resetForm();clearExtra();save();render();
 });
 list.addEventListener('pointercancel',()=>{if(!drag)return;clearDrag();render();});
 list.addEventListener('lostpointercapture',()=>{if(!drag)return;clearDrag();render();});
