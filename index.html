@@ -57,7 +57,7 @@ label{font-size:14px;display:flex;gap:6px;align-items:center}
 <div class="card" id="list"></div>
 
 <div class="card">
-  <textarea id="bulk" rows="5" placeholder="한 줄에 하나씩 붙여넣기&#10;https://youtu.be/xxxxxxxxxxx 1:30 4:20"></textarea>
+  <textarea id="bulk" rows="5" placeholder="한 줄에 하나씩 붙여넣기&#10;1:30~4:20  https://youtu.be/xxxxxxxxxxx"></textarea>
   <div class="row">
     <button id="imp" style="flex:1">📥 가져오기</button>
     <button class="g" id="exp" style="flex:1">📋 목록 복사</button>
@@ -130,7 +130,7 @@ $('add').onclick=()=>{
   clips.push({id,s,e});save();render();
   $('url').value='';$('s').value='';$('e').value='';$('st').textContent='추가됨 ✓';
 };
-function exportText(){return clips.map(c=>'https://youtu.be/'+c.id+' '+fmt(c.s)+(c.e?' '+fmt(c.e):'')).join('\n')}
+function exportText(){return clips.map(c=>fmt(c.s)+'~'+(c.e?fmt(c.e):'끝')+'  https://youtu.be/'+c.id).join('\n')}
 $('exp').onclick=async()=>{
   if(!clips.length){$('bst').textContent='복사할 구간이 없어요.';return}
   const t=exportText();$('bulk').value=t;
