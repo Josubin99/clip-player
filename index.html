@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="apple-touch-icon" sizes="180x180" href="icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="구간재생">
+<title>내 구간 재생목록</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f6f5f2;--card:#fff;--tx:#1d1d1b;--mut:#77756f;--ac:#5b4bdb;--bd:#e3e1db}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17171a;--card:#222227;--tx:#eeede9;--mut:#9a98a0;--ac:#8c80ff;--bd:#33333a}}
+:root[data-theme="dark"]{--bg:#17171a;--card:#222227;--tx:#eeede9;--mut:#9a98a0;--ac:#8c80ff;--bd:#33333a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 -apple-system,"Apple SD Gothic Neo",sans-serif;padding:16px;max-width:560px;margin:0 auto}
+h1{font-size:20px;margin:4px 0 14px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px;margin-bottom:12px}
+.player{aspect-ratio:16/9;width:100%;border:0;border-radius:10px;background:#000;display:block}
+input,textarea{width:100%;font-family:inherit;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font-size:16px}
+.row{display:flex;gap:8px;margin-top:8px}
+button{padding:10px 14px;border:0;border-radius:8px;background:var(--ac);color:#fff;font-size:15px;font-weight:600}
+button.g{background:var(--bd);color:var(--tx)}
+.item{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--bd)}
+.item:first-child{border-top:0}
+.item.on{color:var(--ac);font-weight:700}
+.item .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
+.item .t small{color:var(--mut);font-weight:400}
+.item button{padding:6px 10px;font-size:13px}
+.mut{color:var(--mut);font-size:13px}
+label{font-size:14px;display:flex;gap:6px;align-items:center}
+</style>
+</head>
+<body>
+<h1>🎧 내 구간 재생목록</h1>
+
+<div class="card">
+  <iframe id="pl" class="player" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+  <div class="row">
+    <button id="play">▶ 처음부터 재생</button>
+    <button class="g" id="prev">⏮</button>
+    <button class="g" id="next">⏭</button>
+    <label><input type="checkbox" id="loop" style="width:auto"> 반복</label>
+  </div>
+  <p class="mut" id="st">구간을 추가하고 재생을 눌러보세요.</p>
+</div>
+
+<div class="card">
+  <input id="url" placeholder="유튜브 링크 붙여넣기" inputmode="url">
+  <div class="row">
+    <input id="s" placeholder="시작 (1:30)" inputmode="text">
+    <input id="e" placeholder="끝 (4:20)" inputmode="text">
+  </div>
+  <div class="row"><button id="add" style="width:100%">+ 구간 추가</button></div>
+</div>
+
+<div class="card" id="list"></div>
+
+<div class="card">
+  <textarea id="bulk" rows="5" placeholder="한 줄에 하나씩 붙여넣기&#10;https://youtu.be/xxxxxxxxxxx 1:30 4:20"></textarea>
+  <div class="row">
+    <button id="imp" style="flex:1">📥 가져오기</button>
+    <button class="g" id="exp" style="flex:1">📋 목록 복사</button>
+  </div>
+  <p class="mut" id="bst"></p>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+let clips=[],cur=-1,ready=false,unlocked=false;
+try{clips=JSON.parse(localStorage.getItem('clips')||'[]')}catch(e){}
+const save=()=>{try{localStorage.setItem('clips',JSON.stringify(clips))}catch(e){}};
+const fmt=n=>Math.floor(n/60)+':'+String(n%60).padStart(2,'0');
+function parseT(v){v=(v||'').trim();if(!v)return null;
+  if(v.includes(':')){return v.split(':').reduce((a,b)=>a*60+(+b||0),0)}
+  const n=parseFloat(v);return isNaN(n)?null:Math.floor(n)}
+function vid(u){const m=u.match(/(?:v=|youtu\.be\/|shorts\/|embed\/|live\/)([\w-]{11})/);return m?m[1]:null}
+function render(){
+  const L=$('list');
+  if(!clips.length){L.innerHTML='<span class="mut">아직 구간이 없어요.</span>';return}
+  L.innerHTML='';
+  clips.forEach((c,i)=>{
+    const d=document.createElement('div');d.className='item'+(i===cur?' on':'');
+    d.innerHTML='<span>'+(i+1)+'</span><div class="t">'+c.id+' <small>'+fmt(c.s)+' ~ '+(c.e?fmt(c.e):'끝')+'</small></div>';
+    const p=document.createElement('button');p.className='g';p.textContent='▶';p.onclick=()=>go(i);
+    const x=document.createElement('button');x.className='g';x.textContent='✕';
+    x.onclick=()=>{clips.splice(i,1);if(cur>=clips.length)cur=-1;save();render()};
+    d.append(p,x);L.append(d);
+  });
+}
+const fr=$('pl');
+function post(func,args){fr.contentWindow.postMessage(JSON.stringify({event:'command',func,args}),'*')}
+function go(i){
+  if(i>=clips.length){if($('loop').checked&&clips.length)i=0;else{cur=-1;$('st').textContent='재생 끝';render();return}}
+  if(i<0)i=0;
+  cur=i;const c=clips[i];
+  $('st').textContent=(i+1)+'/'+clips.length+' 재생 중';
+  if(!unlocked||!ready){
+    fr.src='https://www.youtube.com/embed/'+c.id+'?enablejsapi=1&playsinline=1&autoplay=1&start='+c.s+(c.e?'&end='+c.e:'')+'&origin='+encodeURIComponent(location.origin);
+  }else{
+    const o={videoId:c.id,startSeconds:c.s};if(c.e)o.endSeconds=c.e;
+    post('loadVideoById',[o]);
+  }
+  render();
+}
+fr.addEventListener('load',()=>{
+  ready=true;
+  fr.contentWindow.postMessage(JSON.stringify({event:'listening',id:1,channel:'widget'}),'*');
+});
+window.addEventListener('message',e=>{
+  if(!String(e.origin).includes('youtube.com'))return;
+  let d;try{d=typeof e.data==='string'?JSON.parse(e.data):e.data}catch(x){return}
+  if(!d)return;
+  let s=null;
+  if(d.event==='onStateChange')s=d.info;
+  else if(d.event==='infoDelivery'&&d.info&&typeof d.info.playerState==='number')s=d.info.playerState;
+  if(s===1)unlocked=true;
+  if(s===0&&cur>=0)go(cur+1);
+});
+$('play').onclick=()=>{if(!clips.length){$('st').textContent='먼저 구간을 추가하세요.';return}go(0)};
+$('next').onclick=()=>{if(cur>=0)go(cur+1)};
+$('prev').onclick=()=>{if(cur>0)go(cur-1)};
+$('add').onclick=()=>{
+  const u=$('url').value.trim(),id=vid(u);
+  if(!id){$('st').textContent='유튜브 링크를 확인해 주세요.';return}
+  let s=parseT($('s').value);
+  if(s===null){const t=u.match(/[?&]t=(\d+)/);s=t?+t[1]:0}
+  const e=parseT($('e').value);
+  if(e!==null&&e<=s){$('st').textContent='끝 시간이 시작보다 커야 해요.';return}
+  clips.push({id,s,e});save();render();
+  $('url').value='';$('s').value='';$('e').value='';$('st').textContent='추가됨 ✓';
+};
+function exportText(){return clips.map(c=>'https://youtu.be/'+c.id+' '+fmt(c.s)+(c.e?' '+fmt(c.e):'')).join('\n')}
+$('exp').onclick=async()=>{
+  if(!clips.length){$('bst').textContent='복사할 구간이 없어요.';return}
+  const t=exportText();$('bulk').value=t;
+  try{await navigator.clipboard.writeText(t);$('bst').textContent='복사됨 ✓ 메모 앱 등에 붙여넣어 보관하세요.'}
+  catch(e){$('bulk').select();$('bst').textContent='위 칸의 글자를 직접 복사하세요.'}
+};
+$('imp').onclick=()=>{
+  const lines=$('bulk').value.split('\n');let n=0,bad=0;
+  for(const ln of lines){
+    if(!ln.trim())continue;
+    const id=vid(ln);if(!id){bad++;continue}
+    const rest=ln.replace(/https?:\/\/\S+/,' ');
+    const nums=rest.match(/\d+(?::\d+){0,2}/g)||[];
+    let s=nums[0]!==undefined?parseT(nums[0]):null;
+    if(s===null){const t=ln.match(/[?&]t=(\d+)/);s=t?+t[1]:0}
+    let e=nums[1]!==undefined?parseT(nums[1]):null;
+    if(e!==null&&e<=s)e=null;
+    clips.push({id,s,e});n++;
+  }
+  save();render();$('bulk').value='';
+  $('bst').textContent=n+'개 추가됨'+(bad?' ('+bad+'줄은 링크를 못 찾았어요)':'');
+};
+render();
+</script>
+</body>
+</html>
