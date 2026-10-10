@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="구간재생">
-<title>내 구간 재생목록</title>
+<title>재생목록</title>
 <style>
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f6f5f2;--card:#fff;--tx:#1d1d1b;--mut:#77756f;--ac:#5b4bdb;--bd:#e3e1db}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17171a;--card:#222227;--tx:#eeede9;--mut:#9a98a0;--ac:#8c80ff;--bd:#33333a}}
@@ -17,9 +17,9 @@ body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 -apple-system,"
 h1{font-size:20px;margin:4px 0 14px}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px;margin-bottom:12px}
 .player{aspect-ratio:16/9;width:100%;border:0;border-radius:10px;background:#000;display:block}
-input,textarea{width:100%;font-family:inherit;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font-size:16px}
+input,textarea,select{width:100%;font-family:inherit;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font-size:16px}
 .row{display:flex;gap:8px;margin-top:8px}
-button{padding:10px 14px;border:0;border-radius:8px;background:var(--ac);color:#fff;font-size:15px;font-weight:600}
+button{white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 14px;border:0;border-radius:8px;background:var(--ac);color:#fff;font-size:15px;font-weight:600}
 button.g{background:var(--bd);color:var(--tx)}
 .item{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--bd)}
 .item:first-child{border-top:0}
@@ -28,19 +28,37 @@ button.g{background:var(--bd);color:var(--tx)}
 .item .t small{color:var(--mut);font-weight:400}
 .item button{padding:6px 10px;font-size:13px}
 .mut{color:var(--mut);font-size:13px}
-label{font-size:14px;display:flex;gap:6px;align-items:center}
+svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+h1 .t{width:24px;height:24px;vertical-align:-4px;color:var(--ac)}
+.item button svg{width:16px;height:16px}
+.row #play{flex:1;min-width:0}
+.tg{flex:none;display:inline-flex;align-items:center;gap:6px;padding:10px 14px;border-radius:8px;background:var(--bd);color:var(--tx);font-size:15px;font-weight:600}
+.tg:has(input:checked){background:var(--ac);color:#fff}
 </style>
 </head>
 <body>
-<h1>🎧 내 구간 재생목록</h1>
+<h1><svg viewBox="0 0 24 24" class="t"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg> 재생목록</h1>
+
+<div class="card">
+  <div class="row" style="margin-top:0">
+    <select id="setsel" style="flex:1"></select>
+    <button class="g" id="setadd" title="새 세트"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+    <button class="g" id="setren" title="이름 변경"><svg viewBox="0 0 24 24"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button>
+    <button class="g" id="setdel" title="삭제"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+  </div>
+  <div class="row" id="renrow" style="display:none">
+    <input id="rennm" placeholder="세트 이름">
+    <button id="rensave">저장</button>
+  </div>
+</div>
 
 <div class="card">
   <iframe id="pl" class="player" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
   <div class="row">
-    <button id="play">▶ 처음부터 재생</button>
-    <button class="g" id="prev">⏮</button>
-    <button class="g" id="next">⏭</button>
-    <label><input type="checkbox" id="loop" style="width:auto"> 반복</label>
+    <button id="play"><svg viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg>처음부터 재생</button>
+    <button class="g" id="prev" title="이전"><svg viewBox="0 0 24 24"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg></button>
+    <button class="g" id="next" title="다음"><svg viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg></button>
+    <label class="tg" title="반복" aria-label="반복"><input type="checkbox" id="loop" hidden><svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></label>
   </div>
   <p class="mut" id="st">구간을 추가하고 재생을 눌러보세요.</p>
 </div>
@@ -51,7 +69,7 @@ label{font-size:14px;display:flex;gap:6px;align-items:center}
     <input id="s" placeholder="시작 (1:30)" inputmode="text">
     <input id="e" placeholder="끝 (4:20)" inputmode="text">
   </div>
-  <div class="row"><button id="add" style="width:100%">+ 구간 추가</button></div>
+  <div class="row"><button id="add" style="width:100%"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>구간 추가</button></div>
 </div>
 
 <div class="card" id="list"></div>
@@ -59,31 +77,37 @@ label{font-size:14px;display:flex;gap:6px;align-items:center}
 <div class="card">
   <textarea id="bulk" rows="5" placeholder="한 줄에 하나씩 붙여넣기&#10;1:30~4:20  https://youtu.be/xxxxxxxxxxx"></textarea>
   <div class="row">
-    <button id="imp" style="flex:1">📥 가져오기</button>
-    <button class="g" id="exp" style="flex:1">📋 목록 복사</button>
+    <button id="imp" style="flex:1"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>가져오기</button>
+    <button class="g" id="exp" style="flex:1"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>목록 복사</button>
   </div>
   <p class="mut" id="bst"></p>
 </div>
 
 <script>
 const $=id=>document.getElementById(id);
-let clips=[],cur=-1,ready=false,unlocked=false;
-try{clips=JSON.parse(localStorage.getItem('clips')||'[]')}catch(e){}
-const save=()=>{try{localStorage.setItem('clips',JSON.stringify(clips))}catch(e){}};
+const SV=p=>'<svg viewBox="0 0 24 24">'+p+'</svg>';
+const IC_PLAY=SV('<polygon points="6 3 20 12 6 21 6 3"/>'),IC_X=SV('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'),IC_TRASH=SV('<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>');
+let sets=[],act=0,clips=[],cur=-1,ready=false,unlocked=false;
+try{sets=JSON.parse(localStorage.getItem('sets')||'null')||[];act=+localStorage.getItem('act')||0}catch(e){}
+if(!Array.isArray(sets)||!sets.length){let old=[];try{old=JSON.parse(localStorage.getItem('clips')||'[]')}catch(e){}sets=[{name:'1세트',clips:old}]}
+if(act<0||act>=sets.length)act=0;
+clips=sets[act].clips;
+const save=()=>{try{localStorage.setItem('sets',JSON.stringify(sets));localStorage.setItem('act',String(act))}catch(e){}};
 const fmt=n=>Math.floor(n/60)+':'+String(n%60).padStart(2,'0');
 function parseT(v){v=(v||'').trim();if(!v)return null;
   if(v.includes(':')){return v.split(':').reduce((a,b)=>a*60+(+b||0),0)}
   const n=parseFloat(v);return isNaN(n)?null:Math.floor(n)}
 function vid(u){const m=u.match(/(?:v=|youtu\.be\/|shorts\/|embed\/|live\/)([\w-]{11})/);return m?m[1]:null}
 function render(){
+  renderSets();
   const L=$('list');
   if(!clips.length){L.innerHTML='<span class="mut">아직 구간이 없어요.</span>';return}
   L.innerHTML='';
   clips.forEach((c,i)=>{
     const d=document.createElement('div');d.className='item'+(i===cur?' on':'');
     d.innerHTML='<span>'+(i+1)+'</span><div class="t">'+c.id+' <small>'+fmt(c.s)+' ~ '+(c.e?fmt(c.e):'끝')+'</small></div>';
-    const p=document.createElement('button');p.className='g';p.textContent='▶';p.onclick=()=>go(i);
-    const x=document.createElement('button');x.className='g';x.textContent='✕';
+    const p=document.createElement('button');p.className='g';p.innerHTML=IC_PLAY;p.onclick=()=>go(i);
+    const x=document.createElement('button');x.className='g';x.innerHTML=IC_X;
     x.onclick=()=>{clips.splice(i,1);if(cur>=clips.length)cur=-1;save();render()};
     d.append(p,x);L.append(d);
   });
@@ -153,6 +177,37 @@ $('imp').onclick=()=>{
   save();render();$('bulk').value='';
   $('bst').textContent=n+'개 추가됨'+(bad?' ('+bad+'줄은 링크를 못 찾았어요)':'');
 };
+function renderSets(){
+  const s=$('setsel');s.innerHTML='';
+  sets.forEach((x,i)=>{const o=document.createElement('option');o.value=i;o.textContent=x.name+' ('+x.clips.length+')';s.append(o)});
+  s.value=act;
+}
+function switchSet(i){act=i;clips=sets[i].clips;cur=-1;save();render();$('st').textContent=sets[i].name+' 선택됨'}
+$('setsel').onchange=e=>switchSet(+e.target.value);
+$('setadd').onclick=()=>{
+  sets.push({name:(sets.length+1)+'세트',clips:[]});
+  switchSet(sets.length-1);
+  $('st').textContent='새 세트를 만들었어요. 연필 버튼으로 이름을 바꿀 수 있어요.';
+};
+$('setren').onclick=()=>{
+  const r=$('renrow');
+  if(r.style.display==='none'){r.style.display='flex';$('rennm').value=sets[act].name;$('rennm').focus()}
+  else r.style.display='none';
+};
+$('rensave').onclick=()=>{
+  const n=$('rennm').value.trim();
+  if(n){sets[act].name=n;save();renderSets()}
+  $('renrow').style.display='none';
+};
+let armed=false,armT=null;
+$('setdel').onclick=()=>{
+  const b=$('setdel');
+  if(sets.length<2){$('st').textContent='마지막 세트는 지울 수 없어요.';return}
+  if(!armed){armed=true;b.textContent='정말?';clearTimeout(armT);armT=setTimeout(()=>{armed=false;b.innerHTML=IC_TRASH},3000);return}
+  armed=false;clearTimeout(armT);b.innerHTML=IC_TRASH;
+  sets.splice(act,1);switchSet(Math.max(0,act-1));
+};
+$('loop').onchange=e=>{$('st').textContent=e.target.checked?'반복 켜짐':'반복 꺼짐'};
 render();
 </script>
 </body>
