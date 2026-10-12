@@ -417,7 +417,7 @@ function hgPickerSelect(row,field){
  hgPickerTargetRow=row&&row.isConnected?row:null;hgPickerTargetField=field;
  $('hg-target-start').setAttribute('aria-pressed',String(field==='s'));
  $('hg-target-end').setAttribute('aria-pressed',String(field==='e'));
- const n=hgPickerTargetRow?hgPickerRows().indexOf(hgPickerTargetRow)+1:1;
+ const n=hgPickerTargetRow ? Number(hgPickerTargetRow.querySelector('.hg-number')?.textContent.match(/\d+/)?.[0]) || 1 : 1;
  $('hg-picker-target-label').textContent='구간 '+n+' · '+(field==='s'?'시작':'끝');
  document.querySelectorAll('.hg-range').forEach(r=>r.classList.toggle('hg-picker-selected',r===hgPickerTargetRow));
  document.querySelectorAll('.hg-picker-field-selected').forEach(el=>el.classList.remove('hg-picker-field-selected'));
