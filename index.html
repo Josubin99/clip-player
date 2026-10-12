@@ -774,7 +774,7 @@ function hgRefreshMiniMarquee(){
  const overflow=Math.max(0,Math.ceil(text.scrollWidth-box.clientWidth));
  const enabled=overflow>2&&!hgMiniCollapsed&&mini.classList.contains('hg-visible');
  box.classList.toggle('hg-marquee',enabled);
- if(enabled){box.style.setProperty('--hg-marquee-distance',overflow+'px');box.style.setProperty('--hg-marquee-duration',Math.max(6,(overflow/32+3.5)/.68)+'s');}
+ if(enabled){box.style.setProperty('--hg-marquee-distance',overflow+'px');box.style.setProperty('--hg-marquee-duration',Math.max(6,(overflow/60+3.5)/.68)+'s');}
 }
 function hgUpdateMini(){
  const mini=$('hg-mini');if(!mini)return;mini.classList.toggle('hg-collapsed',hgMiniCollapsed);$('hg-mini-collapse').setAttribute('aria-label',hgMiniCollapsed?'미니 플레이어 펼치기':'미니 플레이어 왼쪽으로 접기');
